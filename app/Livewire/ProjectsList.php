@@ -16,6 +16,7 @@ class ProjectsList extends Component
     public $sortDirection = 'desc';
     public $taskStatusFilter = 'all'; // all, todo, in_progress, done
     public $perPage = 10;
+    public $gotoPageInput = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -40,20 +41,16 @@ class ProjectsList extends Component
         $this->resetPage();
     }
 
-    public function nextPage()
+    public function gotoPageFromInput()
     {
-        $this->setPage($this->page + 1);
+        if ($this->gotoPageInput && is_numeric($this->gotoPageInput)) {
+            $page = (int) $this->gotoPageInput;
+            if ($page >= 1) {
+                $this->setPage($page);
+            }
+        }
     }
 
-    public function previousPage()
-    {
-        $this->setPage($this->page - 1);
-    }
-
-    public function gotoPage($page)
-    {
-        $this->setPage($page);
-    }
 
     public function sortBy($field)
     {

@@ -312,9 +312,10 @@
                                        id="gotoPage"
                                        min="1" 
                                        max="{{ $projects->lastPage() }}" 
-                                       wire:keydown.enter="$set('page', $event.target.value)"
+                                       wire:model="gotoPageInput"
+                                       wire:keydown.enter="gotoPageFromInput"
                                        class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                                <button wire:click="gotoPage(document.getElementById('gotoPage').value)" 
+                                <button wire:click="gotoPageFromInput" 
                                         class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
                                     Go
                                 </button>
