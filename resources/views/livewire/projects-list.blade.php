@@ -14,7 +14,7 @@
 
         <!-- Search and Filter Section -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex flex-col md:flex-row gap-4">
+            <div class="flex flex-col lg:flex-row gap-4">
                 <!-- Search Input -->
                 <div class="flex-1">
                     <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Projects</label>
@@ -28,6 +28,18 @@
                             <i class="fas fa-search text-gray-400"></i>
                         </div>
                     </div>
+                </div>
+
+                <!-- Task Status Filter -->
+                <div class="md:w-48">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Filter Tasks</label>
+                    <select wire:model.live="taskStatusFilter" 
+                            class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">All Tasks</option>
+                        <option value="todo">To Do</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="done">Done</option>
+                    </select>
                 </div>
 
                 <!-- Sort Options -->
@@ -104,10 +116,14 @@
                                         </div>
                                         <div class="flex items-center">
                                             <i class="fas fa-check-circle mr-2 text-green-500"></i>
-                                            <span>{{ $project->tasks->where('completed', true)->count() }} completed</span>
+                                            <span>{{ $project->tasks->where('status', 'done')->count() }} done</span>
                                         </div>
                                         <div class="flex items-center">
-                                            <i class="fas fa-clock mr-2"></i>
+                                            <i class="fas fa-clock mr-2 text-blue-500"></i>
+                                            <span>{{ $project->tasks->where('status', 'in_progress')->count() }} in progress</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <i class="fas fa-calendar mr-2"></i>
                                             <span>{{ $project->created_at->format('M j, Y') }}</span>
                                         </div>
                                     </div>
@@ -139,11 +155,11 @@
                                 <div class="mt-4">
                                     <div class="flex justify-between text-sm text-gray-600 mb-1">
                                         <span>Progress</span>
-                                        <span>{{ round(($project->tasks->where('completed', true)->count() / $project->tasks->count()) * 100) }}%</span>
+                                        <span>{{ round(($project->tasks->where('status', 'done')->count() / $project->tasks->count()) * 100) }}%</span>
                                     </div>
                                     <div class="w-full bg-gray-200 rounded-full h-2">
                                         <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
-                                             style="width: {{ ($project->tasks->where('completed', true)->count() / $project->tasks->count()) * 100 }}%"></div>
+                                             style="width: {{ ($project->tasks->where('status', 'done')->count() / $project->tasks->count()) * 100 }}%"></div>
                                     </div>
                                 </div>
                             @endif
@@ -171,14 +187,16 @@
                                             <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
                                                 <div class="flex items-center space-x-3">
                                                     <div class="flex-shrink-0">
-                                                        @if($task->completed)
+                                                        @if($task->status === 'done')
                                                             <i class="fas fa-check-circle text-green-500 text-lg"></i>
+                                                        @elseif($task->status === 'in_progress')
+                                                            <i class="fas fa-clock text-blue-500 text-lg"></i>
                                                         @else
                                                             <i class="fas fa-circle text-gray-300 text-lg"></i>
                                                         @endif
                                                     </div>
                                                     <div class="flex-1 min-w-0">
-                                                        <p class="text-sm font-medium text-gray-900 {{ $task->completed ? 'line-through text-gray-500' : '' }}">
+                                                        <p class="text-sm font-medium text-gray-900 {{ $task->status === 'done' ? 'line-through text-gray-500' : '' }}">
                                                             {{ $task->title ?? 'Untitled Task' }}
                                                         </p>
                                                         @if($task->description)
@@ -190,10 +208,12 @@
                                                 </div>
                                                 <div class="flex items-center space-x-2 text-xs text-gray-500">
                                                     <span>{{ $task->created_at ? $task->created_at->format('M j') : 'N/A' }}</span>
-                                                    @if($task->completed)
-                                                        <span class="text-green-600 font-medium">Completed</span>
+                                                    @if($task->status === 'done')
+                                                        <span class="text-green-600 font-medium">Done</span>
+                                                    @elseif($task->status === 'in_progress')
+                                                        <span class="text-blue-600 font-medium">In Progress</span>
                                                     @else
-                                                        <span class="text-orange-600 font-medium">Pending</span>
+                                                        <span class="text-orange-600 font-medium">To Do</span>
                                                     @endif
                                                 </div>
                                             </div>

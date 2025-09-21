@@ -14,14 +14,21 @@ class ProjectsList extends Component
     public $search = '';
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
+    public $taskStatusFilter = 'all'; // all, todo, in_progress, done
 
     protected $queryString = [
         'search' => ['except' => ''],
         'sortBy' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
+        'taskStatusFilter' => ['except' => 'all'],
     ];
 
     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTaskStatusFilter()
     {
         $this->resetPage();
     }
@@ -60,7 +67,10 @@ class ProjectsList extends Component
             $projects = Auth::user()
                 ->projects()
                 ->with(['tasks' => function ($query) {
-                    $query->select('id', 'project_id', 'title', 'description', 'completed', 'created_at');
+                    $query->select('id', 'project_id', 'title', 'description', 'status', 'created_at')
+                          ->when($this->taskStatusFilter !== 'all', function ($q) {
+                              $q->where('status', $this->taskStatusFilter);
+                          });
                 }])
                 ->when($this->search, function ($query) {
                     $query->where(function ($q) {
