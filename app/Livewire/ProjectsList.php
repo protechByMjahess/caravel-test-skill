@@ -15,12 +15,14 @@ class ProjectsList extends Component
     public $sortBy = 'created_at';
     public $sortDirection = 'desc';
     public $taskStatusFilter = 'all'; // all, todo, in_progress, done
+    public $perPage = 10;
 
     protected $queryString = [
         'search' => ['except' => ''],
         'sortBy' => ['except' => 'created_at'],
         'sortDirection' => ['except' => 'desc'],
         'taskStatusFilter' => ['except' => 'all'],
+        'perPage' => ['except' => 10],
     ];
 
     public function updatingSearch()
@@ -31,6 +33,26 @@ class ProjectsList extends Component
     public function updatingTaskStatusFilter()
     {
         $this->resetPage();
+    }
+
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+
+    public function nextPage()
+    {
+        $this->setPage($this->page + 1);
+    }
+
+    public function previousPage()
+    {
+        $this->setPage($this->page - 1);
+    }
+
+    public function gotoPage($page)
+    {
+        $this->setPage($page);
     }
 
     public function sortBy($field)
@@ -79,7 +101,7 @@ class ProjectsList extends Component
                     });
                 })
                 ->orderBy($this->sortBy, $this->sortDirection)
-                ->paginate(10);
+                ->paginate($this->perPage);
 
             return view('livewire.projects-list', [
                 'projects' => $projects

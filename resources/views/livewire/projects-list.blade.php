@@ -61,6 +61,17 @@
                         <option value="asc">Ascending</option>
                     </select>
                 </div>
+
+                <div class="md:w-32">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Per Page</label>
+                    <select wire:model.live="perPage" 
+                            class="w-full py-2 px-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -74,6 +85,24 @@
         @if (session()->has('error'))
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 {{ session('error') }}
+            </div>
+        @endif
+
+        <!-- Pagination Info -->
+        @if($projects->count() > 0)
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                        <span class="text-sm text-blue-700">
+                            Page {{ $projects->currentPage() }} of {{ $projects->lastPage() }} 
+                            ({{ $projects->total() }} total projects)
+                        </span>
+                    </div>
+                    <div class="text-sm text-blue-600">
+                        {{ $projects->perPage() }} projects per page
+                    </div>
+                </div>
             </div>
         @endif
 
@@ -237,7 +266,102 @@
 
             <!-- Pagination -->
             <div class="mt-8">
-                {{ $projects->links() }}
+                <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow-sm">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        <!-- Mobile pagination -->
+                        @if ($projects->onFirstPage())
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white cursor-not-allowed">
+                                Previous
+                            </span>
+                        @else
+                            <button wire:click="previousPage" 
+                                    class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Previous
+                            </button>
+                        @endif
+
+                        @if ($projects->hasMorePages())
+                            <button wire:click="nextPage" 
+                                    class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Next
+                            </button>
+                        @else
+                            <span class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-500 bg-white cursor-not-allowed">
+                                Next
+                            </span>
+                        @endif
+</div>
+
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Showing
+                                <span class="font-medium">{{ $projects->firstItem() }}</span>
+                                to
+                                <span class="font-medium">{{ $projects->lastItem() }}</span>
+                                of
+                                <span class="font-medium">{{ $projects->total() }}</span>
+                                results
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <!-- Go to Page Input -->
+                            <div class="flex items-center space-x-2">
+                                <label for="gotoPage" class="text-sm text-gray-700">Go to:</label>
+                                <input type="number" 
+                                       id="gotoPage"
+                                       min="1" 
+                                       max="{{ $projects->lastPage() }}" 
+                                       wire:keydown.enter="$set('page', $event.target.value)"
+                                       class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button wire:click="gotoPage(document.getElementById('gotoPage').value)" 
+                                        class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    Go
+                                </button>
+                            </div>
+                            
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                <!-- Previous Page Link -->
+                                @if ($projects->onFirstPage())
+                                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed">
+                                        <i class="fas fa-chevron-left h-5 w-5"></i>
+                                    </span>
+                                @else
+                                    <button wire:click="previousPage" 
+                                            class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <i class="fas fa-chevron-left h-5 w-5"></i>
+                                    </button>
+                                @endif
+
+                                <!-- Pagination Elements -->
+                                @foreach ($projects->getUrlRange(1, $projects->lastPage()) as $page => $url)
+                                    @if ($page == $projects->currentPage())
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-blue-50 text-sm font-medium text-blue-600">
+                                            {{ $page }}
+                                        </span>
+                                    @else
+                                        <button wire:click="gotoPage({{ $page }})" 
+                                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            {{ $page }}
+                                        </button>
+                                    @endif
+                                @endforeach
+
+                                <!-- Next Page Link -->
+                                @if ($projects->hasMorePages())
+                                    <button wire:click="nextPage" 
+                                            class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <i class="fas fa-chevron-right h-5 w-5"></i>
+                                    </button>
+                                @else
+                                    <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 cursor-not-allowed">
+                                        <i class="fas fa-chevron-right h-5 w-5"></i>
+                                    </span>
+                                @endif
+                            </nav>
+                        </div>
+                    </div>
+                </div>
             </div>
         @else
             <!-- Empty State -->
