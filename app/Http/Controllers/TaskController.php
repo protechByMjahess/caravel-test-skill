@@ -17,7 +17,7 @@ class TaskController extends Controller
      */
     public function store(Request $request, Project $project)
     {
-        $this->authorize('create', Task::class);
+        $this->authorize('view', $project);
         
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',

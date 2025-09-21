@@ -146,7 +146,7 @@ class TaskTest extends TestCase
         $response->assertStatus(200);
         $this->assertDatabaseHas('tasks', [
             'id' => $task->id,
-            'due_date' => $newDueDate
+            'due_date' => $newDueDate . ' 00:00:00'
         ]);
     }
 
