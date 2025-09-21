@@ -56,22 +56,30 @@ class ProjectsList extends Component
 
     public function render()
     {
-        $projects = Auth::user()
-            ->projects()
-            ->with(['tasks' => function ($query) {
-                $query->select('id', 'project_id', 'title', 'completed');
-            }])
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('description', 'like', '%' . $this->search . '%');
-                });
-            })
-            ->orderBy($this->sortBy, $this->sortDirection)
-            ->paginate(10);
+        try {
+            $projects = Auth::user()
+                ->projects()
+                ->with(['tasks' => function ($query) {
+                    $query->select('id', 'project_id', 'title', 'description', 'completed', 'created_at');
+                }])
+                ->when($this->search, function ($query) {
+                    $query->where(function ($q) {
+                        $q->where('name', 'like', '%' . $this->search . '%')
+                          ->orWhere('description', 'like', '%' . $this->search . '%');
+                    });
+                })
+                ->orderBy($this->sortBy, $this->sortDirection)
+                ->paginate(10);
 
-        return view('livewire.projects-list', [
-            'projects' => $projects
-        ]);
+            return view('livewire.projects-list', [
+                'projects' => $projects
+            ]);
+        } catch (\Exception $e) {
+            session()->flash('error', 'An error occurred while loading projects: ' . $e->getMessage());
+            
+            return view('livewire.projects-list', [
+                'projects' => collect()->paginate(10)
+            ]);
+        }
     }
 }

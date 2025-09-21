@@ -69,16 +69,28 @@
         @if($projects->count() > 0)
             <div class="grid gap-6">
                 @foreach($projects as $project)
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+                    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200" 
+                         x-data="{ expanded: false }">
                         <div class="p-6">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">
-                                        <a href="{{ route('projects.show', $project) }}" 
-                                           class="hover:text-blue-600 transition-colors duration-200">
-                                            {{ $project->name }}
-                                        </a>
-                                    </h3>
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                                            <a href="{{ route('projects.show', $project) }}" 
+                                               class="hover:text-blue-600 transition-colors duration-200">
+                                                {{ $project->name }}
+                                            </a>
+                                        </h3>
+                                        
+                                        @if($project->tasks->count() > 0)
+                                            <button @click="expanded = !expanded" 
+                                                    class="flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                                                <span x-text="expanded ? 'Hide Tasks' : 'Show Tasks'"></span>
+                                                <i class="fas fa-chevron-down ml-2 transition-transform duration-200" 
+                                                   :class="{ 'rotate-180': expanded }"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                     
                                     @if($project->description)
                                         <p class="text-gray-600 mb-4 line-clamp-2">{{ $project->description }}</p>
@@ -135,6 +147,69 @@
                                     </div>
                                 </div>
                             @endif
+                        </div>
+
+                        <!-- Expandable Tasks Section -->
+                        <div x-show="expanded" 
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-300"
+                             x-transition:enter-start="opacity-0 transform -translate-y-2"
+                             x-transition:enter-end="opacity-100 transform translate-y-0"
+                             x-transition:leave="transition ease-in duration-200"
+                             x-transition:leave-start="opacity-100 transform translate-y-0"
+                             x-transition:leave-end="opacity-0 transform -translate-y-2"
+                             class="border-t border-gray-200 bg-gray-50">
+                            <div class="p-6">
+                                <h4 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                                    <i class="fas fa-list-check mr-2 text-blue-600"></i>
+                                    Tasks ({{ $project->tasks->count() }})
+                                </h4>
+                                
+                                @if($project->tasks->count() > 0)
+                                    <div class="space-y-3 task-list max-h-96 overflow-y-auto">
+                                        @foreach($project->tasks as $task)
+                                            <div class="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="flex-shrink-0">
+                                                        @if($task->completed)
+                                                            <i class="fas fa-check-circle text-green-500 text-lg"></i>
+                                                        @else
+                                                            <i class="fas fa-circle text-gray-300 text-lg"></i>
+                                                        @endif
+                                                    </div>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-medium text-gray-900 {{ $task->completed ? 'line-through text-gray-500' : '' }}">
+                                                            {{ $task->title ?? 'Untitled Task' }}
+                                                        </p>
+                                                        @if($task->description)
+                                                            <p class="text-xs text-gray-500 mt-1 line-clamp-1">
+                                                                {{ $task->description }}
+                                                            </p>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center space-x-2 text-xs text-gray-500">
+                                                    <span>{{ $task->created_at ? $task->created_at->format('M j') : 'N/A' }}</span>
+                                                    @if($task->completed)
+                                                        <span class="text-green-600 font-medium">Completed</span>
+                                                    @else
+                                                        <span class="text-orange-600 font-medium">Pending</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-8 text-gray-500">
+                                        <i class="fas fa-tasks text-4xl mb-2"></i>
+                                        <p>No tasks yet</p>
+                                        <a href="{{ route('projects.show', $project) }}" 
+                                           class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
+                                            Add your first task
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @endforeach
