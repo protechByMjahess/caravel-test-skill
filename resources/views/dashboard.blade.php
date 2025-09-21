@@ -40,9 +40,24 @@
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
+            transition: all 0.3s ease;
+            font-weight: 500;
         }
         .btn:hover {
             background-color: #c0392b;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .btn-livewire {
+            background-color: #28a745;
+            position: relative;
+        }
+        .btn-livewire:hover {
+            background-color: #218838;
+        }
+        .btn-livewire::before {
+            content: "⚡";
+            margin-right: 5px;
         }
         .user-info {
             background-color: #f8f9fa;
@@ -81,6 +96,7 @@
             <h1>Dashboard</h1>
             <div>
                 <a href="{{ route('projects.index') }}" class="btn" style="background-color: #007bff; margin-right: 10px;">My Projects</a>
+                <a href="{{ route('projects.list') }}" class="btn btn-livewire" style="margin-right: 10px;">Livewire Dashboard</a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
                     <button type="submit" class="btn">Logout</button>
@@ -91,6 +107,11 @@
         @if(session('success'))
             <div class="success">{{ session('success') }}</div>
         @endif
+
+        <div style="background-color: #e8f5e8; border: 1px solid #28a745; border-radius: 4px; padding: 15px; margin-bottom: 20px;">
+            <h3 style="color: #28a745; margin-top: 0; margin-bottom: 10px;">🚀 New Livewire Dashboard</h3>
+            <p style="margin: 0; color: #333;">Experience our enhanced project management interface with real-time updates, advanced filtering, and interactive task management. Click the "Livewire Dashboard" button above to explore the new features!</p>
+        </div>
 
         <div class="user-info">
             <h2>Welcome, {{ $user->name }}!</h2>
