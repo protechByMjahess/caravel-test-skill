@@ -37,6 +37,13 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -57,6 +64,13 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Account created successfully!',
+                'redirect' => route('dashboard')
+            ]);
+        }
 
         return redirect()->route('dashboard')->with('success', 'Account created successfully!');
     }
@@ -80,6 +94,13 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -89,7 +110,22 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Login successful!',
+                    'redirect' => route('dashboard')
+                ]);
+            }
+            
             return redirect()->route('dashboard')->with('success', 'Login successful!');
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Invalid credentials',
+                'errors' => ['email' => 'Invalid credentials']
+            ], 422);
         }
 
         return redirect()->back()

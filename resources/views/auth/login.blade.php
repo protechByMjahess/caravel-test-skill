@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -77,6 +78,17 @@
             border-radius: 4px;
             margin-bottom: 20px;
         }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
         .remember-me {
             display: flex;
             align-items: center;
@@ -89,43 +101,108 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" x-data="loginForm()">
         <h1>Login</h1>
         
-        @if(session('success'))
-            <div class="success">{{ session('success') }}</div>
-        @endif
+        <div x-show="message" x-text="message" :class="messageType === 'success' ? 'success' : 'error'" style="display: none;"></div>
 
-        <form method="POST" action="{{ route('login.post') }}">
+        <form @submit.prevent="submitForm()" :class="{ 'loading': loading }">
             @csrf
             
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" required>
-                @error('email')
-                    <div class="error">{{ $message }}</div>
-                @enderror
+                <input type="email" id="email" x-model="form.email" required>
+                <div x-show="errors.email" x-text="errors.email" class="error"></div>
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-                @error('password')
-                    <div class="error">{{ $message }}</div>
-                @enderror
+                <input type="password" id="password" x-model="form.password" required>
+                <div x-show="errors.password" x-text="errors.password" class="error"></div>
             </div>
 
             <div class="remember-me">
-                <input type="checkbox" id="remember" name="remember">
+                <input type="checkbox" id="remember" x-model="form.remember">
                 <label for="remember">Remember me</label>
             </div>
 
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="btn" :disabled="loading">
+                <span x-show="!loading">Login</span>
+                <span x-show="loading">Logging in...</span>
+            </button>
         </form>
 
         <div class="signup-link">
             <p>Don't have an account? <a href="{{ route('signup') }}">Sign up here</a></p>
         </div>
     </div>
+
+    <script>
+        function loginForm() {
+            return {
+                loading: false,
+                message: '',
+                messageType: '',
+                errors: {},
+                form: {
+                    email: '',
+                    password: '',
+                    remember: false
+                },
+                
+                async submitForm() {
+                    this.loading = true;
+                    this.message = '';
+                    this.errors = {};
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('_token', document.querySelector('input[name="_token"]').value);
+                        formData.append('email', this.form.email);
+                        formData.append('password', this.form.password);
+                        if (this.form.remember) {
+                            formData.append('remember', '1');
+                        }
+                        
+                        const response = await fetch('/login', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            this.message = 'Login successful! Redirecting...';
+                            this.messageType = 'success';
+                            
+                            // Redirect to dashboard after 2 seconds
+                            setTimeout(() => {
+                                window.location.href = '/dashboard';
+                            }, 2000);
+                        } else {
+                            if (data.errors) {
+                                this.errors = data.errors;
+                                this.message = 'Please fix the errors below.';
+                                this.messageType = 'error';
+                            } else {
+                                this.message = data.message || 'Invalid credentials. Please try again.';
+                                this.messageType = 'error';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        this.message = 'An error occurred. Please try again.';
+                        this.messageType = 'error';
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>
