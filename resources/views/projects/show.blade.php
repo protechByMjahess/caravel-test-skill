@@ -227,6 +227,15 @@
             font-size: 0.9rem;
         }
         
+        .task-meta span[title] {
+            transition: all 0.3s ease;
+        }
+        
+        .task-meta span[title]:hover {
+            transform: scale(1.05);
+            text-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+        
         .task-status {
             padding: 6px 12px;
             border-radius: 20px;
@@ -416,7 +425,9 @@
                          isHovered: false,
                          showActions: false,
                          isEditing: false,
-                         editTitle: task.title
+                         isEditingDueDate: false,
+                         editTitle: task.title,
+                         editDueDate: task.due_date
                      }"
                      @mouseenter="isHovered = true; showActions = true"
                      @mouseleave="isHovered = false; setTimeout(() => showActions = false, 200)">
@@ -425,7 +436,13 @@
                         <div x-show="!isEditing">
                             <div class="task-title" x-text="task.title"></div>
                             <div class="task-meta">
-                                <span x-show="task.due_date" x-text="`📅 Due: ${formatDate(task.due_date)}`"></span>
+                                <span x-show="task.due_date" x-text="`📅 Due: ${formatDate(task.due_date)}`" 
+                                      @click="isEditingDueDate = true; editDueDate = task.due_date" 
+                                      style="cursor: pointer; text-decoration: underline; color: #667eea;"
+                                      title="Click to edit due date"></span>
+                                <span x-show="!task.due_date" @click="isEditingDueDate = true; editDueDate = ''" 
+                                      style="cursor: pointer; color: #6c757d; font-style: italic;"
+                                      title="Click to add due date">📅 Add due date</span>
                                 <span x-show="task.due_date && task.created_at"> • </span>
                                 <span x-text="`📅 Created: ${formatDate(task.created_at)}`"></span>
                             </div>
@@ -438,6 +455,15 @@
                                    style="flex: 1; padding: 8px 12px; border: 2px solid #667eea; border-radius: 8px; font-size: 14px;">
                             <button @click="saveTaskEdit(task.id)" class="btn btn-sm btn-success">✓</button>
                             <button @click="isEditing = false; editTitle = task.title" class="btn btn-sm">✕</button>
+                        </div>
+                        <div x-show="isEditingDueDate" style="display: flex; gap: 10px; align-items: center; margin-top: 8px;">
+                            <input type="date" 
+                                   x-model="editDueDate" 
+                                   @keyup.enter="saveTaskDueDate(task.id)"
+                                   @keyup.escape="isEditingDueDate = false; editDueDate = task.due_date"
+                                   style="padding: 8px 12px; border: 2px solid #667eea; border-radius: 8px; font-size: 14px;">
+                            <button @click="saveTaskDueDate(task.id)" class="btn btn-sm btn-success">✓</button>
+                            <button @click="isEditingDueDate = false; editDueDate = task.due_date" class="btn btn-sm">✕</button>
                         </div>
                     </div>
                     
@@ -665,6 +691,48 @@
 
                         if (response.ok) {
                             task.title = newTitle;
+                            this.showNotification(data.message, 'success');
+                        } else {
+                            this.showNotification(data.message || 'An error occurred', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        this.showNotification('An error occurred. Please try again.', 'error');
+                    }
+                },
+
+                async saveTaskDueDate(taskId) {
+                    const task = this.tasks.find(t => t.id === taskId);
+                    if (!task) return;
+
+                    const editInput = document.querySelector(`input[x-model="editDueDate"]`);
+                    const newDueDate = editInput ? editInput.value : '';
+
+                    if (newDueDate === task.due_date) {
+                        return;
+                    }
+
+                    this.showNotification('Updating due date...', 'info');
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                        formData.append('due_date', newDueDate);
+                        formData.append('_method', 'PUT');
+
+                        const response = await fetch(`/projects/{{ $project->id }}/tasks/${taskId}`, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            task.due_date = newDueDate;
                             this.showNotification(data.message, 'success');
                         } else {
                             this.showNotification(data.message || 'An error occurred', 'error');
