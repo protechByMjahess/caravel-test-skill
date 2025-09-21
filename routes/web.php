@@ -19,6 +19,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
     
     // Project Routes
+    Route::get('/projects-list', function () {
+        return view('projects.list');
+    })->name('projects.list');
     Route::resource('projects', \App\Http\Controllers\ProjectController::class);
     
     // Task Routes (nested under projects)
