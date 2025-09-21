@@ -19,6 +19,7 @@ class ProjectFactory extends Factory
         return [
             'name' => fake()->sentence(3),
             'description' => fake()->paragraph(3),
+            'user_id' => \App\Models\User::factory(),
         ];
     }
 }
