@@ -79,10 +79,13 @@
     <div class="container">
         <div class="header">
             <h1>Dashboard</h1>
-            <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                @csrf
-                <button type="submit" class="btn">Logout</button>
-            </form>
+            <div>
+                <a href="{{ route('projects.index') }}" class="btn" style="background-color: #007bff; margin-right: 10px;">My Projects</a>
+                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn">Logout</button>
+                </form>
+            </div>
         </div>
 
         @if(session('success'))
