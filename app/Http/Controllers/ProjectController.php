@@ -18,7 +18,7 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
         
-        $projects = auth()->user()->projects()->with('tasks')->get();
+        $projects = auth()->user()->projects()->with('tasks')->paginate(10);
         
         return view('projects.index', compact('projects'));
     }

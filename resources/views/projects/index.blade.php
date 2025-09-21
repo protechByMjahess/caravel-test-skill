@@ -370,11 +370,12 @@
             <div style="flex: 1; min-width: 300px;">
                 <input type="text" 
                        x-model="searchQuery" 
-                       placeholder="🔍 Search projects..." 
+                       placeholder="🔍 Search projects on current page..." 
                        style="width: 100%; padding: 12px 16px; border: 2px solid #e9ecef; border-radius: 25px; font-size: 14px; background: #f8f9fa; transition: all 0.3s ease;"
                        @input="clearSearch()"
                        @focus="$event.target.style.borderColor = '#667eea'; $event.target.style.background = 'white'"
                        @blur="$event.target.style.borderColor = '#e9ecef'; $event.target.style.background = '#f8f9fa'">
+                <small style="color: #6c757d; margin-top: 5px; display: block;">💡 Search works within the current page. Use pagination to browse all projects.</small>
             </div>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <label style="font-weight: 600; color: #495057;">Sort by:</label>
@@ -397,6 +398,19 @@
         <div x-show="projects.length === 0" class="empty-state">
             <h3>No projects yet</h3>
             <p>Create your first project to get started!</p>
+        </div>
+
+        <!-- Pagination Info -->
+        <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 15px; border-radius: 15px; margin-bottom: 20px; border-left: 4px solid #2196f3;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="color: #1976d2; font-weight: 600;">
+                    <span>📄 Page {{ $projects->currentPage() }} of {{ $projects->lastPage() }}</span>
+                    <span style="margin-left: 15px;">📊 {{ $projects->total() }} total projects</span>
+                </div>
+                <div style="color: #1976d2; font-size: 0.9rem;">
+                    Showing {{ $projects->firstItem() }} to {{ $projects->lastItem() }} of {{ $projects->total() }} results
+                </div>
+            </div>
         </div>
 
         <div class="projects-grid" x-show="filteredProjects.length > 0" x-transition>
@@ -437,12 +451,71 @@
             </template>
         </div>
 
+        <!-- Pagination Controls -->
+        @if($projects->hasPages())
+            <div style="margin-top: 40px; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <!-- Previous Page -->
+                @if ($projects->onFirstPage())
+                    <span style="padding: 12px 20px; background: #f8f9fa; color: #6c757d; border-radius: 25px; cursor: not-allowed; border: 2px solid #e9ecef;">
+                        ← Previous
+                    </span>
+                @else
+                    <a href="{{ $projects->previousPageUrl() }}" 
+                       style="padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 25px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);"
+                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102, 126, 234, 0.6)'"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.4)'">
+                        ← Previous
+                    </a>
+                @endif
+
+                <!-- Page Numbers -->
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    @foreach ($projects->getUrlRange(1, $projects->lastPage()) as $page => $url)
+                        @if ($page == $projects->currentPage())
+                            <span style="padding: 12px 16px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                                {{ $page }}
+                            </span>
+                        @else
+                            <a href="{{ $url }}" 
+                               style="padding: 12px 16px; background: #f8f9fa; color: #495057; border-radius: 25px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; border: 2px solid #e9ecef;"
+                               onmouseover="this.style.background='linear-gradient(135deg, #667eea, #764ba2)'; this.style.color='white'; this.style.borderColor='#667eea'"
+                               onmouseout="this.style.background='#f8f9fa'; this.style.color='#495057'; this.style.borderColor='#e9ecef'">
+                                {{ $page }}
+                            </a>
+                        @endif
+                    @endforeach
+                </div>
+
+                <!-- Next Page -->
+                @if ($projects->hasMorePages())
+                    <a href="{{ $projects->nextPageUrl() }}" 
+                       style="padding: 12px 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 25px; text-decoration: none; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);"
+                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102, 126, 234, 0.6)'"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.4)'">
+                        Next →
+                    </a>
+                @else
+                    <span style="padding: 12px 20px; background: #f8f9fa; color: #6c757d; border-radius: 25px; cursor: not-allowed; border: 2px solid #e9ecef;">
+                        Next →
+                    </span>
+                @endif
+            </div>
+        @endif
+
     </div>
 
     <script>
         function projectManager() {
             return {
-                projects: @json($projects),
+                projects: @json($projects->items()),
+                pagination: {
+                    currentPage: {{ $projects->currentPage() }},
+                    lastPage: {{ $projects->lastPage() }},
+                    total: {{ $projects->total() }},
+                    perPage: {{ $projects->perPage() }},
+                    from: {{ $projects->firstItem() }},
+                    to: {{ $projects->lastItem() }}
+                },
                 loading: false,
                 message: '',
                 messageType: '',
